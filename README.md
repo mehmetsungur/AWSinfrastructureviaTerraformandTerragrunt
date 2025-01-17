@@ -1,6 +1,6 @@
 # AWS Infrastructure via Terraform and Terragrunt
 
-This repository demonstrates how to efficiently manage and deploy AWS infrastructure using Terraform and Terragrunt. The project is designed to simplify provisioning, promote reusable code, and handle multi-environment configurations seamlessly.
+This repository demonstrates how to efficiently manage and deploy AWS infrastructure using Terraform and Terragrunt. The project simplifies provisioning, promotes reusable code, and handles multi-environment configurations seamlessly. The deployed infrastructure includes an Auto-Scaling Group (ASG), an Application Load Balancer (ALB), Route 53 DNS management, and KMS encryption.
 
 ---
 
@@ -8,8 +8,10 @@ This repository demonstrates how to efficiently manage and deploy AWS infrastruc
 
 - **Infrastructure as Code:** Declaratively define your AWS resources using Terraform.
 - **Multi-Environment Support:** Manage configurations for development, staging, and production environments.
-- **Modular Design:** Reusable modules for AWS services like VPC, EC2, S3, and RDS.
+- **Auto-Scaling and Load Balancing:** Automatically scale EC2 instances and distribute traffic using ALB.
+- **HTTPS Support:** Secure communication using AWS Certificate Manager (ACM).
 - **Remote State Management:** Uses AWS S3 and DynamoDB for secure and consistent state storage.
+- **KMS Encryption:** Secure EBS volumes with AWS Key Management Service (KMS).
 - **Terragrunt Integration:** Simplifies environment overrides and dependency management.
 
 ---
@@ -21,7 +23,7 @@ AWSinfrastructureviaTerraformandTerragrunt/
 ├── modules/           # Reusable Terraform modules
 ├── environments/      # Environment-specific configurations (dev, staging, prod)
 ├── terragrunt.hcl     # Terragrunt configuration file
-└── README.md         # Documentation
+└── README.md          # Documentation
 ```
 
 ### **Modules**
@@ -29,8 +31,9 @@ Reusable Terraform modules for common AWS services:
 
 - **VPC Module:** Creates a Virtual Private Cloud with subnets, route tables, and internet gateways.
 - **EC2 Module:** Provisions EC2 instances with autoscaling and security groups.
-- **S3 Module:** Configures S3 buckets with versioning and encryption.
+- **ALB Module:** Configures Application Load Balancers with HTTP and HTTPS listeners.
 - **RDS Module:** Deploys a relational database with backups and multi-AZ support.
+- **Route 53 Module:** Manages DNS records for the environment.
 
 ### **Environments**
 Configurations for multiple environments:
@@ -48,68 +51,95 @@ Configurations for multiple environments:
 - [Terraform](https://www.terraform.io/downloads.html)
 - [Terragrunt](https://terragrunt.gruntwork.io/)
 - AWS CLI with configured credentials
+- A registered Route 53 domain
+- An SSL certificate provisioned in AWS ACM
+
+---
 
 ### **Setup Instructions**
 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/mehmetsungur/AWSinfrastructureviaTerraformandTerragrunt.git
+   git clone <repository-url>
    cd AWSinfrastructureviaTerraformandTerragrunt
    ```
 
-2. Configure the backend in `terragrunt.hcl`:
-
-   ```hcl
-   remote_state {
-     backend = "s3"
-     config = {
-       bucket         = "your-terraform-state-bucket"
-       key            = "path/to/your/statefile.tfstate"
-       region         = "eu-north-1"
-       dynamodb_table = "terraform-lock-table"
-     }
-   }
-   ```
-
-3. Navigate to the desired environment:
+2. Navigate to the environment directory:
 
    ```bash
-   cd environments/dev
+   cd environments/eu-north-1
    ```
 
-4. Initialize and apply Terragrunt:
+3. Initialize Terragrunt:
 
    ```bash
    terragrunt init
+   ```
+
+4. Review the plan:
+
+   ```bash
+   terragrunt plan
+   ```
+
+5. Apply the configuration:
+
+   ```bash
    terragrunt apply
+   ```
+
+6. Verify the deployment:
+   - Check the ALB DNS name and Route 53 configuration.
+   - Access the application via the Route 53 domain: `https://app.ankaraplckursu.online`.
+
+---
+
+## **Validation**
+
+After deployment, ensure the following:
+1. DNS resolution works:
+   ```bash
+   nslookup app.ankaraplckursu.online
+   ```
+2. ALB listeners are configured correctly:
+   ```bash
+   aws elbv2 describe-listeners --load-balancer-arn <ALB-ARN>
+   ```
+3. Application is accessible at:
+   ```
+   https://app.ankaraplckursu.online
    ```
 
 ---
 
-## **Best Practices**
+## **Troubleshooting**
 
-1. **Use Remote State:** Store Terraform state files in S3 for consistency and team collaboration.
-2. **Follow DRY Principles:** Leverage Terragrunt to avoid repetitive configurations.
-3. **Test Changes:** Use `terraform plan` or `terragrunt plan` to preview changes before applying.
-4. **Secure Credentials:** Use AWS IAM roles and avoid hardcoding sensitive data.
+### Common Errors and Fixes
 
----
+1. **ValidationError: Security groups not linked to VPC**
+   - Ensure security groups specified in the launch template are linked to the VPC used by the ASG.
 
-## **Contributing**
+2. **Duplicate Listener Error**
+   - Check for existing listeners on the ALB using:
+     ```bash
+     aws elbv2 describe-listeners --load-balancer-arn <ALB-ARN>
+     ```
 
-Contributions are welcome! Feel free to open an issue or submit a pull request to enhance the repository.
+3. **DNS Resolution Issues**
+   - Verify Route 53 records point to the correct ALB DNS name.
 
----
+4. **KMS Key Not Found**
+   - Ensure the KMS key is correctly configured and referenced in the Terraform files.
 
-## **License**
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+5. **HTTPS Listener Issues**
+   - Ensure the ACM certificate ARN is valid and correctly linked in the ALB listener configuration.
 
 ---
 
 ## **Contact**
 
-For questions or feedback, reach out to [Mehmet Sungur](https://github.com/mehmetsungur) or open an issue in the repository.
+For support or queries, contact **Mehmet Sungur**.
 
-Happy coding! 🚀
+---
+
