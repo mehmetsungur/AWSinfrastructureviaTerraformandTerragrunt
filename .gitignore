@@ -1,0 +1,8 @@
+.terraform
+.terragrunt-cache
+.terraform.lock.hcl
+terraform_accessKeys.csv
+git.sh
+*.tfvars
+terraform.tfstate.backup
+terraform.tfstate
